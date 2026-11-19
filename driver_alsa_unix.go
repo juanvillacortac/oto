@@ -18,6 +18,7 @@ package oto
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"unsafe"
@@ -299,6 +300,16 @@ func alsaError(name string, errno int32) error {
 }
 
 func deviceCandidates() []string {
+	// OTO_ALSA_DEVICE picks the PCM to open first (e.g. "plughw:CARD=Audio"
+	// for a USB DAC). Opening "default" ignores devices plugged in later, and
+	// on many systems "default" is pinned to the built-in card.
+	if dev := os.Getenv("OTO_ALSA_DEVICE"); dev != "" {
+		return append([]string{dev}, allDeviceCandidates()...)
+	}
+	return allDeviceCandidates()
+}
+
+func allDeviceCandidates() []string {
 	const getAllDevices = -1
 
 	var hints unsafe.Pointer
