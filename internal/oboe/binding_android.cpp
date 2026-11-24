@@ -231,9 +231,15 @@ Stream &Stream::GetInstance() {
 
 Status Stream::OpenLocked() {
   oboe::AudioStreamBuilder builder;
+  // Music playback, not a game: no low-latency request, so Android routes the
+  // stream to its normal music output (DEEP_BUFFER) instead of the FAST one.
+  // Some OEMs tune the speaker and their effects (Dolby) differently on the
+  // FAST path and tag its tracks as USAGE_GAME, which made music sound flat.
   builder.setDirection(oboe::Direction::Output)
       ->setAudioApi(audio_api_)
-      ->setPerformanceMode(oboe::PerformanceMode::LowLatency)
+      ->setPerformanceMode(oboe::PerformanceMode::None)
+      ->setUsage(oboe::Usage::Media)
+      ->setContentType(oboe::ContentType::Music)
       ->setSharingMode(oboe::SharingMode::Shared)
       ->setFormat(oboe::AudioFormat::Float)
       ->setChannelCount(channel_num_)
